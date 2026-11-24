@@ -1,72 +1,91 @@
-# ⚽ Soccer Engine
+# ⚽ Soccer Engine Simulation
 
-Welcome to the **Soccer Engine AI Challenge**! This is a lightweight, SDL2-based soccer simulation designed for students and developers to practice low-level C programming, game engine architecture, and autonomous agent logic.
+A 2D football game simulation developed in C, featuring a 6v6 match environment, custom game logic, and autonomous player behavior.
 
-## 📌 Project Overview
+This project was developed as part of a university programming assignment, with a focus on understanding game engine architecture, low-level C programming, and AI-based decision-making.
 
-The engine simulates a 6v6 soccer match. The core physics, rendering, and entity management are provided. Your task is to act as the **Referee** (Phase 1) and the **Coach** (Phase 2).
+## 🎮 Project Overview
 
-### Tech Stack
+Soccer Engine is a lightweight football simulation built using SDL2. It provides the core game engine, including player and ball entities, rendering, physics, and match management.
 
-* **Language:** C (C99)
-* **Graphics:** SDL2, SDL_ttf, SDL_image
-* **Physics:** Custom 2D vector-based kinematics
+The project focuses on two important parts of the game logic:
 
----
+- **Referee System:** Responsible for enforcing game rules and validating player actions.
+- **Coach System:** Responsible for player behavior and team decision-making.
 
-## 🚀 Phase 1: The Referee (Game Rules)
+## 🛠️ Technologies
 
-In this phase, you will focus on `engine/logic/referee.c`. Currently, the game is a "wild west" where players can move at light speed, and goals aren't properly recorded.
-
-**Your Objectives:**
-
-1. **Enforce Talent Limits:** Implement `verify_talents` to ensure no player exceeds the `MAX_TALENT_PER_PLAYER` sum (set to 5).
-2. **Validate Movement:** Implement `verify_movement` to ensure players don't exceed the speed allowed by their Agility talent.
-3. **Ball Possession Rules:** Validate that a player actually has the ball before they are allowed to enter the `SHOOTING` state.
-4. **Set-Pieces:** Ensure that during a kickoff, the ball is passed backwards into the team's own half, as per the `verify_shoot` logic.
-
-**Goal:** Familiarize yourself with the `Scene` structure, the `Player` entity, and how the game loop interacts with the logic layer.
-
----
-
-## 🧠 Phase 2: The Coach (AI Strategy)
-
-Once the rules are enforced, it’s time to make the players "smart." You will work primarily in `engine/logic/coach.c`.
-
-**Your Objectives:**
-
-* **Role-Based Logic:** Assign different movement patterns to Defenders, Midfielders, and Attackers based on their `kit` number.
-* **Intercepting:** Write logic so that if a ball comes within a certain radius, players automatically switch to the `INTERCEPTING` state to lunge for it.
-* **Teamwork (Passing):** Instead of just shooting at the goal, players should scan for teammates. If a teammate is closer to the goal and "open" (not covered by an opponent), the player should pass.
-* **Defensive Positioning:** Defenders should stay between the ball and their own goal rather than just chasing the ball randomly.
-
-**Goal:** Develop a rational AI agent that can win a match against a random-movement team without violating any of the referee's rules.
-
----
-
-## 🛠️ Installation & Setup
-
-### Prerequisites
-
-* **GCC** or **Clang** compiler
-* **SDL2** libraries (including `SDL_ttf` and `SDL_image`)
-
----
+- **Programming Language:** C (C99)
+- **Graphics:** SDL2, SDL_ttf, SDL_image
+- **Build System:** CMake
+- **Physics:** Custom 2D vector-based kinematics
 
 ## 📂 Project Structure
 
-* `engine/core/`: Constants and Vector Math (`vec2`).
-* `engine/entities/`: Definitions for `Ball`, `Player`, and `Team`.
-* `engine/logic/`: This is your workspace. Contains `referee.c` and `coach.c`.
-* `engine/graphics/`: SDL2 Renderer and Scene management.
+```text
+.
+├── cmake/
+├── engine/
+│   ├── assets/
+│   ├── core/
+│   ├── entities/
+│   ├── game/
+│   ├── graphics/
+│   └── logic/
+│       ├── coach.c
+│       ├── coach.h
+│       ├── referee.c
+│       └── referee.h
+├── CMakeLists.txt
+├── main.c
+└── README.md
+```
+
+## 💻 My Contributions
+
+My main contributions focused on implementing and modifying the game logic in the following files:
+
+### 1. Referee Logic (`engine/logic/referee.c`)
+
+Worked on the referee system, which is responsible for checking player actions and enforcing the rules of the game.
+
+### 2. Coach Logic (`engine/logic/coach.c`)
+
+Worked on the coach system, which handles player behavior and decision-making during the match.
+
+These contributions were based on the original project specifications.
+
+## 🚀 Installation & Setup
+
+### Prerequisites
+
+- GCC or Clang
+- CMake
+- SDL2
+- SDL2_ttf
+- SDL2_image
+
+### Build
+
+The project uses CMake as its build system.
+
+```bash
+cmake -S . -B build
+cmake --build build
+```
+
+Additional SDL2 setup may be required depending on your operating system.
+
+## 🎓 Project Context
+
+This project was completed as part of a university programming course.
+
+The original project structure and game engine were provided as the starting point. My work focused on the referee and coach logic.
+
+## 🙏 Acknowledgements
+
+Thanks to the original project authors, [MatinB02](https://github.com/MatinB02) and [Mani Ebrahimi](https://github.com/maniebra), for providing the initial game engine and project structure.
 
 ---
 
-
-## 🤝 Contributing
-
-This is an educational project provided by [me](https://github.com/MatinB02) and [Mani Ebrahimi](https://github.com/maniebra). Feel free to fork it, implement your own AI strategies, and open a Pull Request if you find bugs in the core engine!
-
----
-
-*Good luck, Coach! Bring home the trophy.* 🏆
+**Developed as a university programming project.**
