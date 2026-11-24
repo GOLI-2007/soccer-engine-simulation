@@ -5,6 +5,11 @@
 #include "referee.h"
 #include "game/possession.h"
 #include "entities/team.h"
+#include "game/scene.h"
+#include "entities/player.h"
+#include "entities/ball.h"
+#include "core/constants.h"
+
 
 /**
  * @brief Determines whether a goal has been scored.
@@ -15,7 +20,7 @@
  * Important details:
  * - A goal is only valid if the *entire ball* (taking BALL_RADIUS into account)
  *   has crossed the goal line.
- * - The ball must be vertically contained between the goal posts.
+ * - The ball must be vertically contained between the goal positionts.
  * - The right goal corresponds to Team 1 scoring.
  * - The left goal corresponds to Team 2 scoring.
  * @return
@@ -29,6 +34,22 @@ static int goal(float x, float y) {
         // printf("GOAL! Right net hit at x:%.2f, y=%.2f\n", x, y);
         // printf("GOAL! Left net hit at x:%.2f, y=%.2f\n", x, y);
 
+        //محاسبه محدوده تیرکها(عمودی) دروازه
+    float goal_top = CENTER_Y - (GOAL_HEIGHT / 2.0f);
+    float goal_bot = CENTER_Y + (GOAL_HEIGHT / 2.0f);
+    if (y >= goal_top && y <= goal_bot) {
+        
+       //دروازه راست
+        if ((x - BALL_RADIUS) > (PITCH_X + PITCH_W)) {
+            printf("GOAL! Right net hit at x:%.2f, y=%.2f\n", x, y);
+            return 1;
+        }
+        // دروازه چپ
+        if ((x + BALL_RADIUS) < PITCH_X) {
+            printf("GOAL! Left net hit at x:%.2f, y=%.2f\n", x, y);
+            return 2;
+        }
+    }
     return 0; // for now
 }
 
@@ -48,8 +69,19 @@ static bool out(float x, float y) {
     // TODO 2: implement this function
         // You must check for and print this EXACT log:
         // printf("Ball is out: x=%.2f, y=%.2f\n", x, y);
-    
-    return false; // for now
+     bool is_out = false;
+    // چپ
+    if (x + BALL_RADIUS < PITCH_X) is_out = true;
+    // راست
+    else if (x - BALL_RADIUS > PITCH_X + PITCH_W) is_out = true;
+    // بالا
+    else if (y + BALL_RADIUS < PITCH_Y) is_out = true;
+    // پایین
+    else if (y - BALL_RADIUS > PITCH_Y + PITCH_H) is_out = true;
+    if (is_out) {
+        printf("Ball is out: x=%.2f, y=%.2f\n", x, y);
+    }
+    return is_out; // for now
 }
 
 /**
@@ -78,6 +110,20 @@ int referee(struct Scene* scene) {
 
     // TODO 3: implement this function
 
+    //گل شدن
+     int score_result = goal(scene->ball->position.x, scene->ball->position.y);
+    if (score_result == 1) {
+        scene->first_team->score++;
+        return GOAL;
+    } 
+    else if (score_result == 2) {
+        scene->second_team->score++;
+        return GOAL;
+    }
+    //اوت شدن
+    if (out(scene->ball->position.x, scene->ball->position.y)) {
+        return OUT;
+    }
     return PLAY_ON;   // for now
 }
 
@@ -101,6 +147,19 @@ void verify_talents(struct Talents talents) {
         // You must check for and print this EXACT error:    
             // printf("ERROR: Invalid talents! Values: defence=%d, agility=%d, dribbling=%d, shooting=%d, sum=%d\n",
             //    talents.defence, talents.agility, talents.dribbling, talents.shooting, sum);
+    int sum = talents.defence + talents.agility + talents.dribbling + talents.shooting;
+    bool valid = true;
+    // بررسی تکتک مهارتها
+    if (talents.defence < 1 || talents.defence > MAX_TALENT_PER_SKILL) valid = false;
+    if (talents.agility < 1 || talents.agility > MAX_TALENT_PER_SKILL) valid = false;
+    if (talents.dribbling < 1 || talents.dribbling > MAX_TALENT_PER_SKILL) valid = false;
+    if (talents.shooting < 1 || talents.shooting > MAX_TALENT_PER_SKILL) valid = false;
+    //چک کردن مجموع مهارتها
+    if (sum > MAX_TALENT_PER_PLAYER) valid = false;
+    if (!valid) {
+        printf("ERROR: Invalid talents! Values: defence=%d, agility=%d, dribbling=%d, shooting=%d, sum=%d\n",
+               talents.defence, talents.agility, talents.dribbling, talents.shooting, sum);
+    }
 }
 
 
@@ -108,11 +167,11 @@ void verify_talents(struct Talents talents) {
  * @brief Verifies the correctness of a player's current state.
  *
  * Ensures that the player's state is consistent with the game rules.
- * In particular, only the player who currently possesses the ball
+ * In particular, only the player who currently positionsesses the ball
  * is allowed to be in the SHOOTING state.
  *
  * Notes for students:
- * - If a player attempts to shoot without possessing the ball,
+ * - If a player attempts to shoot without positionsessing the ball,
  *   their state must be corrected.
  *
  * @param player Pointer to the player being verified.
@@ -124,6 +183,15 @@ void verify_state(struct Player *player, struct Scene *scene) {
         // You must check for and print this EXACT error:
         // printf(" ERROR: the ball is not yours, you can't shoot! (team %d, player %d)\n",
         //         player->team, player->kit);
+    // شوت داره میزنه؟
+    if (player->state == SHOOTING) {
+        if (scene->ball->possessor != player) { //اگه توپ نداشت
+            printf(" ERROR: the ball is not yours, you can't shoot! (team %d, player %d)\n",
+                    player->team, player->kit);
+            //اصلاح وضعیت
+            player->state = IDLE; 
+        }
+    }
 }
 
 /**
@@ -145,6 +213,24 @@ void verify_movement(struct Player *player) {
         // You must check for and print these EXACT errors:
         // printf(" ERROR: Demanding to run too fast in dimension x! (team %d, player %d)\n", player->team, player->kit);
         // printf(" ERROR: Demanding to run too fast in dimension y! (team %d, player %d)\n", player->team, player->kit);
+
+    // محاسبه حداکثر سرعت
+    float max_speed = ((float)player->talents.agility / (float)MAX_TALENT_PER_SKILL) * MAX_PLAYER_VELOCITY;
+    // سرعت در x
+    if (fabs(player->velocity.x) > max_speed) {
+        printf(" ERROR: Demanding to run too fast in dimension x! (team %d, player %d)\n", player->team, player->kit);
+        // اصلاح
+        if (player->velocity.x > 0) player->velocity.x = max_speed;
+        else player->velocity.x = -max_speed;
+    }
+
+    // سرعت در y
+    if (fabs(player->velocity.y) > max_speed) {
+        printf(" ERROR: Demanding to run too fast in dimension y! (team %d, player %d)\n", player->team, player->kit);
+        // اصلاح
+        if (player->velocity.y > 0) player->velocity.y = max_speed;
+        else player->velocity.y = -max_speed;
+    }
 }
 
 /**
@@ -170,4 +256,39 @@ void verify_shoot(struct Ball *ball, bool kickoff) {
         // printf(" ERROR: Demanding to shoot too fast in dimension x! (team %d, player %d)\n", player->team, player->kit);
         // printf(" ERROR: Demanding to shoot too fast in dimension y! (team %d, player %d)\n", player->team, player->kit);
         // printf(" ERROR: You must pass to your own half! (team %d, player %d)\n", player->team, player->kit);
+    struct Player *player = ball->possessor;
+    
+    // کسی توپ نداره
+    if (!player) return;
+    // حداکثر سرعت شوت
+    float max_shoot_speed = ((float)player->talents.shooting / (float)MAX_TALENT_PER_SKILL) * MAX_BALL_VELOCITY;
+    // سرعت محور x
+    if (fabs(ball->velocity.x) > max_shoot_speed) {
+        printf(" ERROR: Demanding to shoot too fast in dimension x! (team %d, player %d)\n", player->team, player->kit);
+        if (ball->velocity.x > 0) ball->velocity.x = max_shoot_speed;
+        else ball->velocity.x = -max_shoot_speed;
+    }
+    // سرعت محور y
+    if (fabs(ball->velocity.y) > max_shoot_speed) {
+        printf(" ERROR: Demanding to shoot too fast in dimension y! (team %d, player %d)\n", player->team, player->kit);
+        if (ball->velocity.y > 0) ball->velocity.y = max_shoot_speed;
+        else ball->velocity.y = -max_shoot_speed;
+    }
+    // قانون شروع بازی
+    if (kickoff) {
+        bool violation = false;
+        //تیم 1 چپ زمین باشد و به سمت راست زمین پاس بده تخلف میشه
+        if (player->team == 1 && ball->velocity.x > 0) {
+            violation = true;
+        }
+        // تیم 2 راست زمین باشد و به سمت چپ پاس بده تخلف میشه
+        else if (player->team == 2 && ball->velocity.x < 0) {
+            violation = true;
+        }
+        if (violation) {
+            printf(" ERROR: You must pass to your own half! (team %d, player %d)\n", player->team, player->kit);
+            // اصلاح بازی
+            ball->velocity.x = -ball->velocity.x; 
+        }
+    }
 }

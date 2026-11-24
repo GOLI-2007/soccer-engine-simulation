@@ -1,26 +1,40 @@
-# LIBS
+
+# Dependencies
 _deps/
 
-# BUILD FILES
+# Build files
 build/
 bin/
 
-# CMAKE FILES
-cmake_install.cmake
+# CMake generated files
 CMakeFiles/
 CMakeCache.txt
+cmake_install.cmake
 Makefile
 
-# IDE & LSP FILES
+# Ninja generated files
+.ninja_*
+build.ninja
+
+# Compiled files
+*.exe
+*.o
+*.obj
+*.dll
+*.so
+*.a
+*.lib
+
+# IDE files
 .idea/
 .vs/
-.vs-code/
 .vscode/
 .ccls-cache/
 
-# DOXYGEN FILES
+# Generated documentation
 docs/
-Doxyfile
 
-# ZONE.IDENTIFIER FILES
-**/*Zone.Identifier**
+# OS files
+.DS_Store
+Thumbs.db
+**/*:Zone.Identifier**
